@@ -1,0 +1,17 @@
+opt_in_rules: all
+disabled_rules:
+  - blanket_disable_command
+  - contrasted_opening_brace
+  - explicit_acl
+  - explicit_top_level_acl
+  - explicit_type_interface
+  - file_name
+  - file_types_order
+  - function_default_parameter_at_end
+  - no_empty_block
+  - no_extension_access_modifier
+  - no_magic_numbers
+  - one_declaration_per_file
+  - required_deinit
+  - trailing_closure
+  - type_contents_order
