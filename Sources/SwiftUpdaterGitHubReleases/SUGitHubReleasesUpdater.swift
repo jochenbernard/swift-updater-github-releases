@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUpdater
 
-public class SUGitHubReleasesUpdater {
+public final class SUGitHubReleasesUpdater: Sendable {
     private let api: GitHubRepoAPI
     private let assetName: String
 
