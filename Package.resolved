@@ -1,6 +1,15 @@
 {
-  "originHash" : "9064fa87e4bf0c8d9049906468790054575935c81ec96a5492cf0cbd5e341a55",
+  "originHash" : "a990c34555e486515b8934e5a2b850643c8c3cd91219fda9261f719367b74358",
   "pins" : [
+    {
+      "identity" : "swift-updater",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/jochenbernard/swift-updater",
+      "state" : {
+        "branch" : "main",
+        "revision" : "3301f255e4305c83755cfcd7f823a90f4d3b7e80"
+      }
+    },
     {
       "identity" : "swiftlintplugins",
       "kind" : "remoteSourceControl",
