@@ -25,12 +25,12 @@ struct GitHubRepoAPI {
 
     func getReleases() async throws -> [Release] {
         let url = baseURL.appending(component: "releases")
-        let data = try await urlSession.data(from: url)
+        let (data, _) = try await urlSession.data(from: url)
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         return try decoder.decode(
             [Release].self,
-            from: data.0
+            from: data
         )
     }
 

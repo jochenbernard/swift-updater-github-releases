@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUpdater
 
-public struct SUGitHubRelease {
+public struct SUGitHubRelease: Sendable {
     public let name: String
     public let body: String
     public let version: SUVersion

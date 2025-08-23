@@ -4,6 +4,7 @@ import SwiftUpdater
 public final class SUGitHubReleasesUpdater: Sendable {
     private let api: GitHubRepoAPI
     private let assetName: String
+    private let urlSession: URLSession
 
     public init?(
         owner: String,
@@ -23,6 +24,7 @@ public final class SUGitHubReleasesUpdater: Sendable {
 
         self.api = api
         self.assetName = assetName
+        self.urlSession = urlSession
     }
 
     public func getLatestRelease() async throws -> SUGitHubRelease? {
@@ -47,5 +49,49 @@ public final class SUGitHubReleasesUpdater: Sendable {
         }
 
         return nil
+    }
+
+    public func installRelease(_ release: SUGitHubRelease) {
+        Task {
+            do {
+                let downloadURL = try await downloadRelease(release)
+                let downloadDirectoryURL = try unzip(url: downloadURL)
+                try? FileManager.default.removeItem(at: downloadURL)
+                print(downloadDirectoryURL)
+            } catch {
+                assertionFailure(String(describing: error))
+            }
+        }
+    }
+
+    private func downloadRelease(_ release: SUGitHubRelease) async throws -> URL {
+        let (url, _) = try await urlSession.download(from: release.url)
+        return url
+    }
+
+    private func unzip(url: URL) throws -> URL {
+        let destinationURL = url.deletingPathExtension()
+
+        let process = Process()
+        process.executableURL = URL(filePath: "/usr/bin/unzip")
+        process.arguments = [
+            url.path(percentEncoded: false),
+            "-d",
+            destinationURL.path(percentEncoded: false)
+        ]
+
+        try process.run()
+
+        process.waitUntilExit()
+
+        guard process.terminationStatus == .zero else {
+            throw Error.failedToUnzip
+        }
+
+        return destinationURL
+    }
+
+    enum Error: Swift.Error {
+        case failedToUnzip
     }
 }
