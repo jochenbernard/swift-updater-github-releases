@@ -30,7 +30,7 @@ public class SUGitHubUpdate {
                     return
                 }
 
-                await try install()
+                try await install()
 
                 if case .canceled = state {
                     return

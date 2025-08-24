@@ -9,6 +9,10 @@ let package = Package(
         .library(
             name: "SwiftUpdaterGitHubReleases",
             targets: ["SwiftUpdaterGitHubReleases"]
+        ),
+        .library(
+            name: "SwiftUpdaterGitHubReleasesUI",
+            targets: ["SwiftUpdaterGitHubReleasesUI"]
         )
     ],
     dependencies: [
@@ -29,6 +33,18 @@ let package = Package(
                     name: "SwiftUpdater",
                     package: "swift-updater"
                 )
+            ],
+            plugins: [
+                .plugin(
+                    name: "SwiftLintBuildToolPlugin",
+                    package: "SwiftLintPlugins"
+                )
+            ]
+        ),
+        .target(
+            name: "SwiftUpdaterGitHubReleasesUI",
+            dependencies: [
+                .target(name: "SwiftUpdaterGitHubReleases")
             ],
             plugins: [
                 .plugin(

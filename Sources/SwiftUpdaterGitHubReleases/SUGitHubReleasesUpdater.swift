@@ -10,7 +10,7 @@ public final class SUGitHubReleasesUpdater: Sendable {
         owner: String,
         repo: String,
         assetName: String,
-        urlSession: URLSession
+        urlSession: URLSession = .shared
     ) {
         guard
             let api = GitHubRepoAPI(
