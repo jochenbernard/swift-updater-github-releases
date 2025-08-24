@@ -22,7 +22,7 @@ public class SUGitHubUpdate {
             return
         }
 
-        state = .downloading
+        state = .downloading(progress: .zero)
 
         Task {
             do {
@@ -94,7 +94,20 @@ public class SUGitHubUpdate {
     }
 
     private func download() async throws -> URL {
-        let (url, _) = try await urlSession.download(from: release.url)
+        let download = SUGitHubDownload(
+            url: release.url,
+            urlSession: urlSession,
+            onProgress: { progress in
+                if case .canceled = self.state {
+                    return
+                }
+
+                self.state = .downloading(progress: progress)
+            }
+        )
+
+        let url = try await download.start()
+
         return url
     }
 
@@ -122,7 +135,7 @@ public class SUGitHubUpdate {
 
     public enum State {
         case suspended
-        case downloading
+        case downloading(progress: CGFloat)
         case unzipping
         case installing
         case completed

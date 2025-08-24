@@ -14,18 +14,31 @@ public struct SUGitHubUpdateView: View {
 
     public var body: some View {
         ProgressView(
-            value: nil as CGFloat?,
+            value: progress,
             label: {
                 Text("Installing update...")
             },
             currentValueLabel: {
-                currentValueLabel
+                currentProgressLabel
             }
         )
         .tint(tint)
     }
 
-    private var currentValueLabel: some View {
+    private var progress: CGFloat? {
+        switch state {
+        case .suspended, .unzipping, .installing, .completed:
+            nil
+
+        case .downloading(let progress):
+            progress
+
+        case .canceled, .failed:
+            1.0
+        }
+    }
+
+    private var currentProgressLabel: some View {
         switch state {
         case .suspended, .downloading:
             Text("Downloading...")
@@ -43,7 +56,7 @@ public struct SUGitHubUpdateView: View {
             Text("Canceled")
 
         case .failed(let error):
-            Text(error.localizedDescription)
+            Text(String(describing: error))
         }
     }
 
@@ -59,6 +72,6 @@ public struct SUGitHubUpdateView: View {
 }
 
 #Preview {
-    SUGitHubUpdateView(state: .downloading)
+    SUGitHubUpdateView(state: .downloading(progress: 0.5))
         .padding()
 }
