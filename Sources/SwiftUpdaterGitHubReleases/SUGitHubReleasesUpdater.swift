@@ -54,14 +54,37 @@ public final class SUGitHubReleasesUpdater: Sendable {
     public func installRelease(_ release: SUGitHubRelease) {
         Task {
             do {
-                let downloadURL = try await downloadRelease(release)
-                let downloadDirectoryURL = try unzip(url: downloadURL)
-                try? FileManager.default.removeItem(at: downloadURL)
-                print(downloadDirectoryURL)
+                try await installRelease(release)
             } catch {
                 assertionFailure(String(describing: error))
             }
         }
+    }
+
+    private func installRelease(_ release: SUGitHubRelease) async throws {
+        let download = try await downloadRelease(release)
+        let directory = try unzip(download)
+
+        try? FileManager.default.removeItem(at: download)
+
+        let files = try FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        )
+        let apps = files.filter { file in
+            file.pathExtension == "app"
+        }
+
+        guard apps.count == 1 else {
+            try? FileManager.default.removeItem(at: directory)
+            throw Error.failedToUnzip
+        }
+
+        try SUUpdater.installUpdate(from: apps[apps.startIndex])
+
+        try? FileManager.default.removeItem(at: directory)
+
+        await SUUpdater.relaunch()
     }
 
     private func downloadRelease(_ release: SUGitHubRelease) async throws -> URL {
@@ -69,7 +92,7 @@ public final class SUGitHubReleasesUpdater: Sendable {
         return url
     }
 
-    private func unzip(url: URL) throws -> URL {
+    private func unzip(_ url: URL) throws -> URL {
         let destinationURL = url.deletingPathExtension()
 
         let process = Process()
