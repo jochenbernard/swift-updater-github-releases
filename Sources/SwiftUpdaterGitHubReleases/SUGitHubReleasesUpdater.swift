@@ -27,28 +27,38 @@ public final class SUGitHubReleasesUpdater: Sendable {
         self.urlSession = urlSession
     }
 
-    public func getLatestRelease() async throws -> SUGitHubRelease? {
-        let releases = try await api.getReleases()
+    public func getReleases() async throws -> [SUGitHubRelease] {
+        try await api
+            .getReleases()
+            .compactMap { release in
+                guard
+                    !release.draft,
+                    let version = SUVersion(string: release.tagName),
+                    let url = release.assets.first(where: { $0.name == assetName })?.browserDownloadUrl
+                else {
+                    return nil
+                }
 
-        for release in releases {
-            guard
-                !release.draft,
-                let version = SUVersion(string: release.tagName),
-                let url = release.assets.first(where: { $0.name == assetName })?.browserDownloadUrl
-            else {
-                continue
+                return SUGitHubRelease(
+                    name: release.name,
+                    body: release.body,
+                    version: version,
+                    isPrerelease: release.prerelease,
+                    url: url
+                )
             }
+            .sorted(by: { $0.version > $1.version })
+    }
 
-            return SUGitHubRelease(
-                name: release.name,
-                body: release.body,
-                version: version,
-                isPrerelease: release.prerelease,
-                url: url
-            )
+    // swiftlint:disable:next discouraged_optional_boolean
+    public func getLatestRelease(isPrerelease: Bool? = false) async throws -> SUGitHubRelease? {
+        try await getReleases().first { release in
+            if let isPrerelease {
+                release.isPrerelease == isPrerelease
+            } else {
+                true
+            }
         }
-
-        return nil
     }
 
     @MainActor

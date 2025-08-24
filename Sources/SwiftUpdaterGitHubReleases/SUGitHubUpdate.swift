@@ -38,7 +38,7 @@ public class SUGitHubUpdate {
 
                 state = .completed
 
-                await SUUpdater.relaunch()
+                SUUpdater.relaunch()
             } catch let error as Error {
                 state = .failed(error)
             } catch {
@@ -98,17 +98,17 @@ public class SUGitHubUpdate {
             url: release.url,
             urlSession: urlSession,
             onProgress: { progress in
-                if case .canceled = self.state {
-                    return
-                }
+                Task { @MainActor in
+                    if case .canceled = self.state {
+                        return
+                    }
 
-                self.state = .downloading(progress: progress)
+                    self.state = .downloading(progress: progress)
+                }
             }
         )
 
-        let url = try await download.start()
-
-        return url
+        return try await download.start()
     }
 
     private func unzip(_ url: URL) throws -> URL {

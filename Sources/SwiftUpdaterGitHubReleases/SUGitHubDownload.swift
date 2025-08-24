@@ -3,19 +3,20 @@ import Foundation
 final class SUGitHubDownload: NSObject, URLSessionDownloadDelegate {
     private let url: URL
     private let urlSession: URLSession
-    private let onProgress: (CGFloat) -> Void
-    private var continuation: CheckedContinuation<URL, Swift.Error>?
+    private let onProgress: @Sendable (CGFloat) -> Void
+    @MainActor private var continuation: CheckedContinuation<URL, Swift.Error>?
 
     init(
         url: URL,
         urlSession: URLSession,
-        onProgress: @escaping (CGFloat) -> Void
+        onProgress: @Sendable @escaping (CGFloat) -> Void
     ) {
         self.url = url
         self.urlSession = urlSession
         self.onProgress = onProgress
     }
 
+    @MainActor
     func start() async throws -> URL {
         try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation
@@ -45,12 +46,16 @@ final class SUGitHubDownload: NSObject, URLSessionDownloadDelegate {
                 to: destination
             )
 
-            continuation?.resume(returning: destination)
+            Task { @MainActor in
+                continuation?.resume(returning: destination)
+                continuation = nil
+            }
         } catch {
-            continuation?.resume(throwing: error)
+            Task { @MainActor in
+                continuation?.resume(throwing: error)
+                continuation = nil
+            }
         }
-
-        continuation = nil
     }
 
     func urlSession(
@@ -58,8 +63,10 @@ final class SUGitHubDownload: NSObject, URLSessionDownloadDelegate {
         task: URLSessionTask, // swiftlint:disable:this unused_parameter
         didCompleteWithError error: (any Swift.Error)?
     ) {
-        continuation?.resume(throwing: error ?? Error.failed)
-        continuation = nil
+        Task { @MainActor in
+            continuation?.resume(throwing: error ?? Error.failed)
+            continuation = nil
+        }
     }
 
     func urlSession(

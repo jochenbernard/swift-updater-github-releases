@@ -52,16 +52,6 @@ let package = Package(
                     package: "SwiftLintPlugins"
                 )
             ]
-        ),
-        .testTarget(
-            name: "SwiftUpdaterGitHubReleasesTests",
-            dependencies: ["SwiftUpdaterGitHubReleases"],
-            plugins: [
-                .plugin(
-                    name: "SwiftLintBuildToolPlugin",
-                    package: "SwiftLintPlugins"
-                )
-            ]
         )
     ]
 )
