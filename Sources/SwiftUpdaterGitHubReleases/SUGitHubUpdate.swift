@@ -95,7 +95,7 @@ public class SUGitHubUpdate {
 
     private func download() async throws -> URL {
         let download = SUGitHubDownload(
-            url: release.url,
+            url: release.downloadURL,
             urlSession: urlSession,
             onProgress: { progress in
                 Task { @MainActor in

@@ -19,15 +19,29 @@ final class SUGitHubDownload: NSObject, URLSessionDownloadDelegate {
     @MainActor
     func start() async throws -> URL {
         try await withCheckedThrowingContinuation { continuation in
+            guard self.continuation == nil else {
+                continuation.resume(throwing: Error.downloadAlreadyStarted)
+                return
+            }
+
             self.continuation = continuation
 
             let urlRequest = URLRequest(url: url)
             let downloadTask = urlSession.downloadTask(with: urlRequest)
-
             downloadTask.delegate = self
-
             downloadTask.resume()
         }
+    }
+
+    func urlSession(
+        _: URLSession,
+        downloadTask: URLSessionDownloadTask, // swiftlint:disable:this unused_parameter
+        didWriteData bytesWritten: Int64, // swiftlint:disable:this unused_parameter
+        totalBytesWritten: Int64,
+        totalBytesExpectedToWrite: Int64
+    ) {
+        let progress = CGFloat(totalBytesWritten) / CGFloat(totalBytesExpectedToWrite)
+        onProgress(progress)
     }
 
     func urlSession(
@@ -64,23 +78,13 @@ final class SUGitHubDownload: NSObject, URLSessionDownloadDelegate {
         didCompleteWithError error: (any Swift.Error)?
     ) {
         Task { @MainActor in
-            continuation?.resume(throwing: error ?? Error.failed)
+            continuation?.resume(throwing: error ?? Error.downloadFailed)
             continuation = nil
         }
     }
 
-    func urlSession(
-        _: URLSession,
-        downloadTask: URLSessionDownloadTask, // swiftlint:disable:this unused_parameter
-        didWriteData bytesWritten: Int64, // swiftlint:disable:this unused_parameter
-        totalBytesWritten: Int64,
-        totalBytesExpectedToWrite: Int64
-    ) {
-        let progress = CGFloat(totalBytesWritten) / CGFloat(totalBytesExpectedToWrite)
-        onProgress(progress)
-    }
-
     enum Error: Swift.Error {
-        case failed
+        case downloadAlreadyStarted
+        case downloadFailed
     }
 }

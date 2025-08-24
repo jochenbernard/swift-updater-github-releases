@@ -34,7 +34,7 @@ public final class SUGitHubReleasesUpdater: Sendable {
                 guard
                     !release.draft,
                     let version = SUVersion(string: release.tagName),
-                    let url = release.assets.first(where: { $0.name == assetName })?.browserDownloadUrl
+                    let downloadURL = release.assets.first(where: { $0.name == assetName })?.browserDownloadUrl
                 else {
                     return nil
                 }
@@ -44,7 +44,7 @@ public final class SUGitHubReleasesUpdater: Sendable {
                     body: release.body,
                     version: version,
                     isPrerelease: release.prerelease,
-                    url: url
+                    downloadURL: downloadURL
                 )
             }
             .sorted(by: { $0.version > $1.version })
