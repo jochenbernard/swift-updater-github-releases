@@ -6,14 +6,14 @@ struct GitHubRepoAPI {
 
     init?(
         owner: String,
-        repo: String,
+        repository: String,
         urlSession: URLSession
     ) {
         guard
             let baseURL = URL(string: "https://api.github.com")?.appending(
                 components: "repos",
                 owner,
-                repo
+                repository
             )
         else {
             return nil

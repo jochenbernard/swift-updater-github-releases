@@ -27,7 +27,7 @@ public struct SUGitHubUpdateView: View {
 
     private var progress: CGFloat? {
         switch state {
-        case .suspended, .unzipping, .installing, .completed:
+        case .waiting, .extracting, .installing, .completed:
             nil
 
         case .downloading(let progress):
@@ -40,11 +40,11 @@ public struct SUGitHubUpdateView: View {
 
     private var currentProgressLabel: some View {
         switch state {
-        case .suspended, .downloading:
+        case .waiting, .downloading:
             Text("Downloading...")
 
-        case .unzipping:
-            Text("Unzipping...")
+        case .extracting:
+            Text("Extracting...")
 
         case .installing:
             Text("Installing...")
@@ -62,7 +62,7 @@ public struct SUGitHubUpdateView: View {
 
     private var tint: HierarchicalShapeStyle? {
         switch state {
-        case .suspended, .downloading, .unzipping, .installing, .completed:
+        case .waiting, .downloading, .extracting, .installing, .completed:
             nil
 
         case .canceled, .failed:

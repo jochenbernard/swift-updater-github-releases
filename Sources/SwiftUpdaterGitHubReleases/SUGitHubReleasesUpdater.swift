@@ -3,19 +3,23 @@ import SwiftUpdater
 
 public final class SUGitHubReleasesUpdater: Sendable {
     private let api: GitHubRepoAPI
-    private let assetName: String
+    private let assetMatcher: SUFileMatcher
+    private let extractor: SUUpdateExtractor
     private let urlSession: URLSession
+    private let updater: SUUpdater
 
     public init?(
         owner: String,
-        repo: String,
-        assetName: String,
-        urlSession: URLSession = .shared
+        repository: String,
+        assetMatcher: SUFileMatcher,
+        extractor: SUUpdateExtractor,
+        urlSession: URLSession = .shared,
+        bundle: Bundle = .main
     ) {
         guard
             let api = GitHubRepoAPI(
                 owner: owner,
-                repo: repo,
+                repository: repository,
                 urlSession: urlSession
             )
         else {
@@ -23,18 +27,30 @@ public final class SUGitHubReleasesUpdater: Sendable {
         }
 
         self.api = api
-        self.assetName = assetName
+        self.assetMatcher = assetMatcher
+        self.extractor = extractor
         self.urlSession = urlSession
+        self.updater = SUUpdater(bundle: bundle)
     }
 
-    public func getReleases() async throws -> [SUGitHubRelease] {
+    public func getAllReleases() async throws -> [SUGitHubRelease] {
         try await api
             .getReleases()
             .compactMap { release in
                 guard
                     !release.draft,
-                    let version = SUVersion(string: release.tagName),
-                    let downloadURL = release.assets.first(where: { $0.name == assetName })?.browserDownloadUrl
+                    let version = SUVersion(string: release.tagName)
+                else {
+                    return nil
+                }
+
+                let assets = release.assets.filter { asset in
+                    assetMatcher.matches(asset.name)
+                }
+
+                guard
+                    assets.count <= 1,
+                    let downloadURL = assets.first?.browserDownloadUrl
                 else {
                     return nil
                 }
@@ -50,9 +66,10 @@ public final class SUGitHubReleasesUpdater: Sendable {
             .sorted(by: { $0.version > $1.version })
     }
 
-    // swiftlint:disable:next discouraged_optional_boolean
-    public func getLatestRelease(isPrerelease: Bool? = false) async throws -> SUGitHubRelease? {
-        try await getReleases().first { release in
+    public func getLatestRelease(
+        isPrerelease: Bool? = false // swiftlint:disable:this discouraged_optional_boolean
+    ) async throws -> SUGitHubRelease? {
+        try await getAllReleases().first { release in
             if let isPrerelease {
                 release.isPrerelease == isPrerelease
             } else {
@@ -65,6 +82,8 @@ public final class SUGitHubReleasesUpdater: Sendable {
     public func update(to release: SUGitHubRelease) -> SUGitHubUpdate {
         SUGitHubUpdate(
             urlSession: urlSession,
+            extractor: extractor,
+            updater: updater,
             release: release
         )
     }

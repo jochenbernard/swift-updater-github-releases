@@ -5,21 +5,33 @@ import SwiftUpdater
 @MainActor
 public class SUGitHubUpdate {
     private let urlSession: URLSession
+    private let extractor: SUUpdateExtractor
+    private let updater: SUUpdater
+
     public let release: SUGitHubRelease
+
     public private(set) var state: State
 
     init(
         urlSession: URLSession,
+        extractor: SUUpdateExtractor,
+        updater: SUUpdater,
         release: SUGitHubRelease
     ) {
         self.urlSession = urlSession
+        self.extractor = extractor
+        self.updater = updater
         self.release = release
-        self.state = .suspended
+        self.state = .waiting
     }
 
-    public func resume() {
-        guard case .suspended = state else {
-            return
+    public func start() throws(Error) {
+        if case .canceled = state {
+            throw Error.updateWasCanceled
+        }
+
+        guard case .waiting = state else {
+            throw Error.updateAlreadyStarted
         }
 
         state = .downloading(progress: .zero)
@@ -38,11 +50,9 @@ public class SUGitHubUpdate {
 
                 state = .completed
 
-                SUUpdater.relaunch()
-            } catch let error as Error {
-                state = .failed(error)
+                try updater.relaunch()
             } catch {
-                state = .failed(.unknown(error))
+                state = .failed(error)
             }
         }
     }
@@ -59,26 +69,10 @@ public class SUGitHubUpdate {
             return
         }
 
-        state = .unzipping
+        state = .extracting
 
-        let directory = try unzip(download)
-        defer { remove(directory) }
-
-        if case .canceled = state {
-            return
-        }
-
-        let files = try FileManager.default.contentsOfDirectory(
-            at: directory,
-            includingPropertiesForKeys: nil
-        )
-        let apps = files.filter { file in
-            file.pathExtension == "app"
-        }
-
-        guard apps.count == 1 else {
-            throw Error.failedToUnzip
-        }
+        let update = try await extractor.extract(from: download)
+        defer { remove(update) }
 
         if case .canceled = state {
             return
@@ -86,11 +80,7 @@ public class SUGitHubUpdate {
 
         state = .installing
 
-        try SUUpdater.installUpdate(from: apps[apps.startIndex])
-    }
-
-    private func remove(_ url: URL) {
-        try? FileManager.default.removeItem(at: url)
+        try updater.install(from: update)
     }
 
     private func download() async throws -> URL {
@@ -99,7 +89,7 @@ public class SUGitHubUpdate {
             urlSession: urlSession,
             onProgress: { progress in
                 Task { @MainActor in
-                    if case .canceled = self.state {
+                    guard case .downloading = self.state else {
                         return
                     }
 
@@ -111,40 +101,22 @@ public class SUGitHubUpdate {
         return try await download.start()
     }
 
-    private func unzip(_ url: URL) throws -> URL {
-        let destinationURL = url.deletingPathExtension()
-
-        let process = Process()
-        process.executableURL = URL(filePath: "/usr/bin/unzip")
-        process.arguments = [
-            url.path(percentEncoded: false),
-            "-d",
-            destinationURL.path(percentEncoded: false)
-        ]
-
-        try process.run()
-
-        process.waitUntilExit()
-
-        guard process.terminationStatus == .zero else {
-            throw Error.failedToUnzip
-        }
-
-        return destinationURL
+    private func remove(_ url: URL) {
+        try? FileManager.default.removeItem(at: url)
     }
 
     public enum State {
-        case suspended
+        case waiting
         case downloading(progress: CGFloat)
-        case unzipping
+        case extracting
         case installing
         case completed
         case canceled
-        case failed(Error)
+        case failed(Swift.Error)
     }
 
     public enum Error: Swift.Error {
-        case failedToUnzip
-        case unknown(Swift.Error)
+        case updateWasCanceled
+        case updateAlreadyStarted
     }
 }
