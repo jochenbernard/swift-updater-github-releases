@@ -4,15 +4,14 @@ import SwiftUpdater
 public final class SUGitHubReleasesUpdater: Sendable {
     private let api: GitHubRepoAPI
     private let assetMatcher: SUFileMatcher
-    private let extractor: SUUpdateExtractor
-    private let urlSession: URLSession
     private let updater: SUUpdater
 
     public init?(
         owner: String,
         repository: String,
         assetMatcher: SUFileMatcher,
-        extractor: SUUpdateExtractor,
+        downloader: SUUpdateDownloader = .standard(),
+        extractor: SUUpdateExtractor?,
         urlSession: URLSession = .shared,
         bundle: Bundle = .main
     ) {
@@ -28,9 +27,11 @@ public final class SUGitHubReleasesUpdater: Sendable {
 
         self.api = api
         self.assetMatcher = assetMatcher
-        self.extractor = extractor
-        self.urlSession = urlSession
-        self.updater = SUUpdater(bundle: bundle)
+        self.updater = SUUpdater(
+            bundle: bundle,
+            downloader: downloader,
+            extractor: extractor
+        )
     }
 
     public func getAllReleases() async throws -> [SUGitHubRelease] {
@@ -79,12 +80,7 @@ public final class SUGitHubReleasesUpdater: Sendable {
     }
 
     @MainActor
-    public func update(to release: SUGitHubRelease) -> SUGitHubUpdate {
-        SUGitHubUpdate(
-            urlSession: urlSession,
-            extractor: extractor,
-            updater: updater,
-            release: release
-        )
+    public func update(to release: SUGitHubRelease) -> SUUpdate {
+        updater.update(from: release.downloadURL)
     }
 }

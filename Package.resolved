@@ -1,5 +1,5 @@
 {
-  "originHash" : "85e77e9d84ec2ed97cf06ab39df60fc632040bc8cd39a7b077b2fa16f5e57601",
+  "originHash" : "6b4681ccf6f929272012fe29e9e95b6dd205043370d17a06f850f001f949ab72",
   "pins" : [
     {
       "identity" : "swift-updater",
@@ -7,7 +7,7 @@
       "location" : "https://github.com/jochenbernard/swift-updater",
       "state" : {
         "branch" : "main",
-        "revision" : "eb7450888efe0fc8844cbd332717c77ad32b1028"
+        "revision" : "017c39b9bc6365bfc7e399ec2e77cd28c2446333"
       }
     },
     {
