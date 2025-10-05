@@ -18,7 +18,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/jochenbernard/swift-updater",
-            branch: "main"
+            from: "0.1.0"
         )
     ],
     targets: [
