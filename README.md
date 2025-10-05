@@ -1,4 +1,4 @@
-# SwiftUpdaterGitHubReleases ![Swift 6.2](https://img.shields.io/badge/Swift-6.2-f05138?style=flat) ![Xcode 26.0](https://img.shields.io/badge/Xcode-26.0-0071e3?style=flat)
+# SwiftUpdaterGitHubReleases [![Tests](https://github.com/jochenbernard/swift-updater-github-releases/actions/workflows/tests.yml/badge.svg)](https://github.com/jochenbernard/swift-updater-github-releases/actions/workflows/tests.yml) ![Swift 6.2](https://img.shields.io/badge/Swift-6.2-f05138?style=flat) ![Xcode 26.0](https://img.shields.io/badge/Xcode-26.0-0071e3?style=flat)
 
 A collection of utilities to update unsandboxed macOS apps from GitHub releases.
 
