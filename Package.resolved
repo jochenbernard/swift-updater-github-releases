@@ -1,13 +1,13 @@
 {
-  "originHash" : "6b4681ccf6f929272012fe29e9e95b6dd205043370d17a06f850f001f949ab72",
+  "originHash" : "172cdf126adcb3dfc476f17d64edbd5715758c1e0fef8ba0925a2416383a6b93",
   "pins" : [
     {
       "identity" : "swift-updater",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jochenbernard/swift-updater",
       "state" : {
-        "branch" : "main",
-        "revision" : "017c39b9bc6365bfc7e399ec2e77cd28c2446333"
+        "revision" : "74aaf152c8b64aa25e31f5c5bce7832f0b49cdca",
+        "version" : "0.1.0"
       }
     },
     {
