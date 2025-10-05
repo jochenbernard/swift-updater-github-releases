@@ -23,7 +23,7 @@ struct GitHubRepoAPI {
         self.urlSession = urlSession
     }
 
-    func getReleases() async throws -> [Release] {
+    func fetchAllReleases() async throws -> [Release] {
         let url = baseURL.appending(component: "releases")
         let (data, _) = try await urlSession.data(from: url)
         let decoder = JSONDecoder()
