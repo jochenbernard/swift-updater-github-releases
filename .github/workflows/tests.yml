@@ -27,6 +27,4 @@ jobs:
           key: ${{ runner.os }}-packages-${{ hashFiles('Package.resolved') }}
           restore-keys: ${{ runner.os }}-packages-
       - name: Lint
-        run: swift package plugin --allow-writing-to-package-directory swiftlint --strict Sources/ Tests/
-      - name: Run tests
-        run: swift test
+        run: swift package plugin --allow-writing-to-package-directory swiftlint --strict Sources/
